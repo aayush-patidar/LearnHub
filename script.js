@@ -1,7 +1,7 @@
 console.log("✅ JS file is connected");
 
 
-// Mobile Menu Toggle
+
 const hamburger = document.getElementById("hamburger")
 const navMenu = document.getElementById("navMenu")
 
@@ -10,7 +10,7 @@ hamburger?.addEventListener("click", () => {
   navMenu.classList.toggle("active")
 })
 
-// Close menu when clicking on a link
+
 const navLinks = document.querySelectorAll(".nav-link")
 navLinks.forEach((link) => {
   link.addEventListener("click", () => {
@@ -19,7 +19,7 @@ navLinks.forEach((link) => {
   })
 })
 
-// Course Data
+
 const coursesData = [
   {
     id: 1,
@@ -113,7 +113,7 @@ const coursesData = [
   },
 ]
 
-// Render Courses
+
 function renderCourses(coursesToShow = coursesData) {
   const coursesGrid = document.getElementById("coursesGrid")
   if (!coursesGrid) return
@@ -137,7 +137,7 @@ function renderCourses(coursesToShow = coursesData) {
     .join("")
 }
 
-// Filter and Search
+
 const searchInput = document.getElementById("searchInput")
 const categoryFilter = document.getElementById("categoryFilter")
 
@@ -158,12 +158,12 @@ function filterCourses() {
 searchInput?.addEventListener("input", filterCourses)
 categoryFilter?.addEventListener("change", filterCourses)
 
-// Render courses on page load
+
 if (document.getElementById("coursesGrid")) {
   renderCourses()
 }
 
-// Contact Form Handling
+
 const contactForm = document.getElementById("contactForm")
 
 contactForm?.addEventListener("submit", (e) => {
@@ -195,7 +195,7 @@ contactForm?.addEventListener("submit", (e) => {
   }
 })
 
-// Smooth scrolling for links
+
 document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
   anchor.addEventListener("click", function (e) {
     const href = this.getAttribute("href")
@@ -208,3 +208,114 @@ document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
     }
   })
 })
+
+// -----------------------------
+// Simple client-side auth (localStorage)
+// -----------------------------
+function getUsers() {
+  try {
+    return JSON.parse(localStorage.getItem("learnhubUsers") || "[]")
+  } catch (e) {
+    return []
+  }
+}
+
+function saveUsers(users) {
+  localStorage.setItem("learnhubUsers", JSON.stringify(users))
+}
+
+function getCurrentUser() {
+  return JSON.parse(localStorage.getItem("learnhubCurrentUser") || "null")
+}
+
+function setCurrentUser(user) {
+  localStorage.setItem("learnhubCurrentUser", JSON.stringify(user))
+}
+
+function clearCurrentUser() {
+  localStorage.removeItem("learnhubCurrentUser")
+}
+
+// Signup handling
+const signupFormEl = document.getElementById("signupForm")
+if (signupFormEl) {
+  signupFormEl.addEventListener("submit", (e) => {
+    e.preventDefault()
+    const firstName = document.getElementById("firstName").value.trim()
+    const lastName = document.getElementById("lastName").value.trim()
+    const email = document.getElementById("signupEmail").value.trim().toLowerCase()
+    const password = document.getElementById("signupPassword").value
+    const confirm = document.getElementById("confirmPassword").value
+    const signupMessage = document.getElementById("signupMessage")
+
+    if (!firstName || !lastName || !email || !password || !confirm) {
+      signupMessage.textContent = "Please fill all fields"
+      return
+    }
+    if (password.length < 8) {
+      signupMessage.textContent = "Password must be at least 8 characters"
+      return
+    }
+    if (password !== confirm) {
+      signupMessage.textContent = "Passwords do not match"
+      return
+    }
+
+    const users = getUsers()
+    if (users.find((u) => u.email === email)) {
+      signupMessage.textContent = "An account with that email already exists"
+      return
+    }
+
+    const user = { firstName, lastName, email, password }
+    users.push(user)
+    saveUsers(users)
+    signupMessage.textContent = "Account created. Redirecting to login..."
+    setTimeout(() => {
+      window.location.href = "login.html"
+    }, 1200)
+  })
+}
+
+// Login handling
+const loginFormEl = document.getElementById("loginForm")
+if (loginFormEl) {
+  loginFormEl.addEventListener("submit", (e) => {
+    e.preventDefault()
+    const email = document.getElementById("email").value.trim().toLowerCase()
+    const password = document.getElementById("password").value
+    const loginMessage = document.getElementById("loginMessage")
+
+    const users = getUsers()
+    const user = users.find((u) => u.email === email && u.password === password)
+    if (!user) {
+      loginMessage.textContent = "Invalid credentials"
+      return
+    }
+    setCurrentUser({ email: user.email, firstName: user.firstName, lastName: user.lastName })
+    loginMessage.textContent = "Login successful. Redirecting..."
+    setTimeout(() => {
+      window.location.href = "index.html"
+    }, 800)
+  })
+}
+
+// Show user greeting in nav and handle logout
+function renderNavUser() {
+  const current = getCurrentUser()
+  const navButton = document.querySelector(".nav-button")
+  if (!navButton) return
+  if (current) {
+    navButton.innerHTML = `
+      <span class="nav-user">Hi, ${current.firstName}</span>
+      <button id="logoutBtn" class="btn-logout">Logout</button>
+    `
+    const logoutBtn = document.getElementById("logoutBtn")
+    logoutBtn?.addEventListener("click", () => {
+      clearCurrentUser()
+      window.location.reload()
+    })
+  }
+}
+
+renderNavUser()
